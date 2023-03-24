@@ -10,6 +10,7 @@ import (
 func main() {
 	// Get parameters of launching for application
 	appAccessToken := flag.String("APP_ACCESS_TOKEN", "", "Access token for application registered in hh.ru")
+	flag.Parse()
 
 	client := hh.NewClient(
 		&url.URL{
@@ -22,7 +23,14 @@ func main() {
 	appInfo, err := client.Me()
 	if err != nil {
 		fmt.Printf("Error: %v", err)
+	} else {
+		fmt.Printf("App info: %+v", appInfo)
 	}
 
-	fmt.Printf("App info: %+v", appInfo)
+	vacancies, err := client.GetVacancies()
+	if err != nil {
+		fmt.Printf("Error: %v", err)
+	} else {
+		fmt.Printf("Vacancies: %+v", vacancies)
+	}
 }
