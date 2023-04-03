@@ -1,9 +1,7 @@
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/dimau/go-hh-client v0.0.0-20230323172844-a677787cf23f h1:AplkvZSuhkMdy9/rpAzKCjVajgLDRUhPDsjGngcfOVE=
-github.com/dimau/go-hh-client v0.0.0-20230323172844-a677787cf23f/go.mod h1:h+Mdpwc0q4fPIrY3qPCJTq/fOGQhCFx4rPB+XzAwoNc=
-github.com/dimau/go-hh-client v0.0.0-20230324185551-9b0df7922fa2 h1:NArhxRltdKmmjWwWPvBmyS9mjmXVo5LRllE7PLrwubA=
-github.com/dimau/go-hh-client v0.0.0-20230324185551-9b0df7922fa2/go.mod h1:0FxeCobBvQfoyuDSdmHYOM59t50+60mrQzve8ygQnDo=
+github.com/dimau/hh-api-client-go v0.0.0-20230403180624-ce9f733b7a47 h1:RRwJyrcGTcAhE1xKfBBFcTJkH+UoO6Ttw2t3b4DD3N0=
+github.com/dimau/hh-api-client-go v0.0.0-20230403180624-ce9f733b7a47/go.mod h1:ZMXfSYsqxijPs6mi6imsLnAEUxOD55TF5ENA9keoBNs=
 github.com/ijustfool/docker-secrets v0.0.0-20191021062307-b25ea5007562 h1:v7V+wm1nJzV1NKyuTRKb8UwHJ7gm9fBV4mqANfQxu+8=
 github.com/ijustfool/docker-secrets v0.0.0-20191021062307-b25ea5007562/go.mod h1:Y7sfMPseINeLXpzmLeRxHD2rdekjyjl91m0T+DC1UCM=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
@@ -19,6 +17,7 @@ github.com/stretchr/objx v0.4.0/go.mod h1:YvHI0jy2hoMjB+UWwv71VJQ9isScKT/TqJzVSS
 github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
 github.com/yosuke-furukawa/json5 v0.1.1/go.mod h1:sw49aWDqNdRJ6DYUtIQiaA3xyj2IL9tjeNYmX2ixwcU=
+go.uber.org/goleak v1.2.1 h1:NBol2c7O1ZokfZ0LEU9K6Whx/KnwvepVetCUhtKja4A=
 go.uber.org/goleak v1.2.1/go.mod h1:qlT2yGI9QafXHhZZLxlSuNsMw3FFLxBr+tBRlmO1xH4=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=

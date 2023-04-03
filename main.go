@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/dimau/go-hh-client"
+	"github.com/dimau/hh-api-client-go"
 	"github.com/ijustfool/docker-secrets"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"log"
