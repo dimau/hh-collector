@@ -8,13 +8,14 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 	"log"
 	"net/url"
+	"os"
 	"time"
 )
 
 func main() {
-	// Get parameters of launching for application
-	//appAccessToken := flag.String("APP_ACCESS_TOKEN", "", "Access token for application registered in hh.ru")
-	//flag.Parse()
+	// Get environment vars for the application
+	rabbitMQServerName := os.Getenv("RABBIT_MQ_SERVER_NAME")
+	rabbitMQPort := os.Getenv("RABBIT_MQ_PORT")
 
 	// Get Docker secrets
 	dockerSecrets, _ := secrets.NewDockerSecrets("")
@@ -58,7 +59,7 @@ func main() {
 	/* Connect to RabbitMQ server */
 
 	// Creating of the connection
-	connectionURL := fmt.Sprintf("amqp://%v:%v@rabbitmq:5672/", rabbitMQUser, rabbitMQPass)
+	connectionURL := fmt.Sprintf("amqp://%v:%v@%v:%v/", rabbitMQUser, rabbitMQPass, rabbitMQServerName, rabbitMQPort)
 	conn, err := amqp.Dial(connectionURL)
 	failOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
