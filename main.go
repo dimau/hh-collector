@@ -24,16 +24,91 @@ func main() {
 	rabbitMQPass, _ := dockerSecrets.Get("rabbitmq_pass")
 	appAccessToken, _ := dockerSecrets.Get("hh_api_token")
 
+	rabbitConn, rabbitChannel, rabbitHHQueue := initializeRabbitMQConnection(rabbitMQUser, rabbitMQPass, rabbitMQServerName, rabbitMQPort)
+	defer rabbitConn.Close()
+	defer rabbitChannel.Close()
+
+	client := initializeHHClient(appAccessToken)
+
+	vacancies := getVacancies(client, "react")
+
+	publishVacanciesToRabbitMQ(rabbitChannel, rabbitHHQueue.Name, vacancies)
+}
+
+func failOnError(err error, msg string) {
+	if err != nil {
+		log.Panicf("%s: %s", msg, err)
+	}
+}
+
+func getVacancies(client *hh.Client, vacanciesType string) *hh.Vacancies {
+	var text string
+
+	switch vacanciesType {
+	case "react":
+		text = "react"
+	case "angular":
+		text = "angular"
+	case "vue":
+		text = "vue"
+	default:
+		text = ""
+	}
+
+	// Options for getting React vacancies
+	var options = &hh.OptionsForGetVacancies{
+		Text:         text,
+		SearchField:  "name",
+		Period:       2,
+		ItemsPerPage: 6,
+		PageNumber:   0,
+	}
+
+	// Get vacancies
+	vacancies, err := client.GetVacancies(options)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+
+	return vacancies
+}
+
+// Publish all vacancies to RabbitMQ queue with name HeadHunter
+func publishVacanciesToRabbitMQ(rabbitChannel *amqp.Channel, routingKey string, vacancies *hh.Vacancies) {
+	for _, vacancy := range vacancies.Items {
+		vacancyMarshaled, err := json.Marshal(vacancy)
+		if err != nil {
+			log.Fatalln(err.Error())
+		}
+
+		// Create a context
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		// Publish received vacancy to the queue HeadHunter in RabbitMQ
+		err = rabbitChannel.PublishWithContext(ctx,
+			"",         // exchange
+			routingKey, // routing key
+			false,      // mandatory
+			false,      // immediate
+			amqp.Publishing{
+				ContentType: "application/json",
+				Body:        vacancyMarshaled,
+			},
+		)
+		failOnError(err, "Failed to publish a message")
+	}
+}
+
+func initializeRabbitMQConnection(rabbitMQUser, rabbitMQPass, rabbitMQServerName, rabbitMQPort string) (*amqp.Connection, *amqp.Channel, amqp.Queue) {
 	// Create connection to RabbitMQ
 	connectionURL := fmt.Sprintf("amqp://%v:%v@%v:%v/", rabbitMQUser, rabbitMQPass, rabbitMQServerName, rabbitMQPort)
 	conn, err := amqp.Dial(connectionURL)
 	failOnError(err, "Failed to connect to RabbitMQ")
-	defer conn.Close()
 
 	// Create channel to RabbitMQ
 	rabbitChannel, err := conn.Channel()
 	failOnError(err, "Failed to open a channel")
-	defer rabbitChannel.Close()
 
 	// Create HeadHunter queue (if it's already exist just get this channel)
 	args := make(amqp.Table)
@@ -48,7 +123,11 @@ func main() {
 	)
 	failOnError(err, "Failed to declare a queue")
 
-	// Creating a new REST API client for hh.ru
+	return conn, rabbitChannel, q
+}
+
+// Creating a new REST API client for hh.ru
+func initializeHHClient(appAccessToken string) *hh.Client {
 	client := hh.NewClient(
 		&url.URL{
 			Scheme: "https",
@@ -57,51 +136,5 @@ func main() {
 		"dimau-app/1.0 (dimau777@gmail.com)",
 		appAccessToken)
 
-	// Options for getting React vacancies
-	var options = &hh.OptionsForGetVacancies{
-		Text:         "react",
-		SearchField:  "name",
-		Period:       2,
-		ItemsPerPage: 5,
-		PageNumber:   0,
-	}
-
-	// Get vacancies
-	vacancies, err := client.GetVacancies(options)
-	if err != nil {
-		fmt.Printf("Error: %v", err)
-	} else {
-		fmt.Printf("Vacancies: %+v", vacancies)
-	}
-
-	// Publish all vacancies to RabbitMQ queue with name HeadHunter
-	for _, vacancy := range vacancies.Items {
-		vacancyMarshaled, err := json.Marshal(vacancy)
-		if err != nil {
-			log.Fatalln(err.Error())
-		}
-
-		// Create a context
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-
-		// Publish received vacancy to the queue HeadHunter in RabbitMQ
-		err = rabbitChannel.PublishWithContext(ctx,
-			"",     // exchange
-			q.Name, // routing key
-			false,  // mandatory
-			false,  // immediate
-			amqp.Publishing{
-				ContentType: "application/json",
-				Body:        vacancyMarshaled,
-			},
-		)
-		failOnError(err, "Failed to publish a message")
-	}
-}
-
-func failOnError(err error, msg string) {
-	if err != nil {
-		log.Panicf("%s: %s", msg, err)
-	}
+	return client
 }
