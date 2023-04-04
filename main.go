@@ -24,15 +24,19 @@ func main() {
 	rabbitMQPass, _ := dockerSecrets.Get("rabbitmq_pass")
 	appAccessToken, _ := dockerSecrets.Get("hh_api_token")
 
+	// Initialize RabbitMQ connection
 	rabbitConn, rabbitChannel, rabbitHHQueue := initializeRabbitMQConnection(rabbitMQUser, rabbitMQPass, rabbitMQServerName, rabbitMQPort)
 	defer rabbitConn.Close()
 	defer rabbitChannel.Close()
 
+	// Initialize HeadHunter connection
 	client := initializeHHClient(appAccessToken)
 
-	vacancies := getVacancies(client, "react")
-
-	publishVacanciesToRabbitMQ(rabbitChannel, rabbitHHQueue.Name, vacancies)
+	// Get vacancies page by page
+	for page := 0; page < 3; page++ {
+		vacancies := getVacancies(client, "react", page)
+		publishVacanciesToRabbitMQ(rabbitChannel, rabbitHHQueue.Name, vacancies)
+	}
 }
 
 func failOnError(err error, msg string) {
@@ -41,7 +45,7 @@ func failOnError(err error, msg string) {
 	}
 }
 
-func getVacancies(client *hh.Client, vacanciesType string) *hh.Vacancies {
+func getVacancies(client *hh.Client, vacanciesType string, page int) *hh.Vacancies {
 	var text string
 
 	switch vacanciesType {
@@ -61,7 +65,7 @@ func getVacancies(client *hh.Client, vacanciesType string) *hh.Vacancies {
 		SearchField:  "name",
 		Period:       2,
 		ItemsPerPage: 6,
-		PageNumber:   0,
+		PageNumber:   page,
 	}
 
 	// Get vacancies
