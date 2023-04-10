@@ -42,9 +42,9 @@ func main() {
 	var err error
 
 	for page := 0; page < 3; page++ {
-		vacancies := getVacancies(client, "react", page)
+		vacancies := getVacancies(client, "react", page, lastHandledVacancyPublishTime)
 		filteredVacancies := filterAlreadyHandledVacancies(vacancies, lastHandledVacancyPublishTime)
-		lastPublishVacancyTime, err = getLastTime(lastHandledVacancyPublishTime, filteredVacancies)
+		lastPublishVacancyTime, err = getLastTime(lastPublishVacancyTime, filteredVacancies)
 		failOnError(err, "Fail on getting last time for filtered vacancies")
 		publishVacanciesToRabbitMQ(rabbitChannel, rabbitHHQueue.Name, vacancies)
 
@@ -53,7 +53,7 @@ func main() {
 			break
 		}
 
-		// Delay for 1 second to prevent overwhelming API
+		// Delay for 1 second to prevent overwhelming HeadHunter API
 		t := time.NewTimer(1 * time.Second)
 		<-t.C
 	}

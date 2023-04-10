@@ -1,14 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"github.com/dimau/hh-api-client-go"
 	"log"
 	"net/url"
 	"time"
 )
 
-func getVacancies(client *hh.Client, vacanciesType string, page int) *[]hh.Vacancy {
+func getVacancies(client *hh.Client, vacanciesType string, page int, fromPublishTime *time.Time) *[]hh.Vacancy {
 	var text string
 
 	switch vacanciesType {
@@ -26,9 +25,11 @@ func getVacancies(client *hh.Client, vacanciesType string, page int) *[]hh.Vacan
 	var options = &hh.OptionsForGetVacancies{
 		Text:         text,
 		SearchField:  "name",
-		Period:       2,
+		Period:       0,
 		ItemsPerPage: 6,
 		PageNumber:   page,
+		DateFrom:     fromPublishTime,
+		OrderBy:      "publication_time",
 	}
 
 	// Get vacancies
@@ -66,7 +67,7 @@ func filterAlreadyHandledVacancies(vacancies *[]hh.Vacancy, lastHandledVacancyPu
 }
 
 func isAlreadyHandledVacancy(vacancy *hh.Vacancy, lastHandledVacancyPublishTime *time.Time) bool {
-	vacancyPublishTime, err := convertTimeStringHHToGoTime(vacancy.PublishedAt)
+	vacancyPublishTime, err := convertTimeFromISO8601StringToGoTime(vacancy.PublishedAt)
 	failOnError(err, "Fail to convert vacancy publish time to time.Time in Go")
 	if vacancyPublishTime.Compare(*lastHandledVacancyPublishTime) != 1 {
 		return true
@@ -75,12 +76,12 @@ func isAlreadyHandledVacancy(vacancy *hh.Vacancy, lastHandledVacancyPublishTime 
 	}
 }
 
-func getLastTime(lastHandledVacancyPublishTime *time.Time, filteredVacancies *[]hh.Vacancy) (*time.Time, error) {
+func getLastTime(lastHandledVacancyPublishTime *time.Time, vacancies *[]hh.Vacancy) (*time.Time, error) {
 	currentLastTime := lastHandledVacancyPublishTime
-	for _, vacancy := range *filteredVacancies {
-		vacancyTime, err := convertTimeStringHHToGoTime(vacancy.PublishedAt)
+	for _, vacancy := range *vacancies {
+		vacancyTime, err := convertTimeFromISO8601StringToGoTime(vacancy.PublishedAt)
 		if err != nil {
-			return currentLastTime, err
+			return nil, err
 		}
 
 		if currentLastTime.Compare(*vacancyTime) == -1 {
@@ -89,12 +90,4 @@ func getLastTime(lastHandledVacancyPublishTime *time.Time, filteredVacancies *[]
 	}
 
 	return currentLastTime, nil
-}
-
-// Publish time in vacancies from HH has format: "2023-04-03T15:16:31+0300"
-// RFC3339 required format: "2006-01-02T15:04:05+03:00"
-func convertTimeStringHHToGoTime(source string) (*time.Time, error) {
-	timeStringRFC3339 := fmt.Sprintf("%v:%v", source[0:22], source[22:24])
-	goTime, err := time.Parse(time.RFC3339, timeStringRFC3339)
-	return &goTime, err
 }
